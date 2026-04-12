@@ -7,32 +7,24 @@ import multer from 'multer';
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(express.static('./'));
-app.use('/uploads', express.static('uploads'));
+
+// फाईल्स एक्सेस करण्यासाठी हे महत्त्वाचे आहे
+app.use(express.static(path.join(__dirname, './')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 const pool = new Pool({
   connectionString: 'postgres://neondb_owner:npg_P9v8EAsRMTpW@ep-cool-butterfly-a1mrebe9-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require',
 });
 
-// फोटो कुठे सेव्ह करायचा त्याचे सेटिंग
-const storage = multer.diskStorage({
-  destination: './uploads/',
-  filename: (req, file, cb) => {
-    cb(null, 'profile-' + Date.now() + path.extname(file.originalname));
-  }
-});
-const upload = multer({ storage: storage });
-
-// फोटो अपलोड API
-app.post('/api/upload', upload.single('profile'), async (req, res) => {
-  const { userId } = req.body;
-  if (!req.file) return res.status(400).json({ success: false, message: "फोटो निवडा!" });
-
-  const imageUrl = `https://nodejs-65fz.onrender.com/uploads/${req.file.filename}`;
-
+// रजिस्टर API
+app.post('/api/register', async (req, res) => {
+  const { username, email, password } = req.body;
   try {
-    await pool.query('UPDATE users SET profile_pic = $1 WHERE id = $2', [imageUrl, userId]);
-    res.json({ success: true, url: imageUrl });
+    const result = await pool.query(
+      'INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING id',
+      [username, email, password]
+    );
+    res.json({ success: true, message: "नोंदणी यशस्वी!", id: result.rows[0].id });
   } catch (err) {
     res.status(500).json({ success: false, message: "डेटाबेस एरर!" });
   }
@@ -46,10 +38,10 @@ app.post('/api/login', async (req, res) => {
     if (result.rows.length > 0) {
       res.json({ success: true, user: result.rows[0] });
     } else {
-      res.status(401).json({ success: false, message: "चुकीचे डिटेल्स!" });
+      res.status(401).json({ success: false, message: "चुकीचे नाव किंवा पासवर्ड!" });
     }
   } catch (err) {
-    res.status(500).json({ success: false });
+    res.status(500).json({ success: false, message: "सर्व्हर एरर!" });
   }
 });
 
