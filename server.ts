@@ -1,39 +1,33 @@
 ﻿import express from 'express';
 import cors from 'cors';
 import { Pool } from 'pg';
+import multer from 'multer';
+import path from 'path';
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
+// ही ओळ महत्त्वाची आहे: यामुळे तुमच्या सर्व HTML फाईल्स ब्राऊजरमध्ये दिसतील
+app.use(express.static('./')); 
+app.use('/uploads', express.static('uploads'));
+
 const pool = new Pool({
   connectionString: 'postgres://neondb_owner:npg_P9v8EAsRMTpW@ep-cool-butterfly-a1mrebe9-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require',
 });
 
+// Hello API
 app.get('/api/hello', (req, res) => {
   res.json({ message: "Talknik Server is Online & Database Connected!" });
 });
 
-// नवीन युजर रजिस्ट्रेशन API
-app.post('/api/register', async (req, res) => {
-  const { username, email, password } = req.body;
-  try {
-    const result = await pool.query(
-      'INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING id',
-      [username, email, password]
-    );
-    res.json({ success: true, message: "युजर यशस्वीरित्या नोंदवला गेला!", id: result.rows[0].id });
-  } catch (err) {
-    res.status(500).json({ success: false, message: "नोंदणी करताना चूक झाली!", error: err.message });
-  }
-});
-
+// लॉगिन API
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
   try {
     const result = await pool.query('SELECT * FROM users WHERE username = $1 AND password = $2', [username, password]);
     if (result.rows.length > 0) {
-      res.json({ success: true, message: "लॉगिन यशस्वी झाले!", user: result.rows[0] });
+      res.json({ success: true, message: "लॉगिन यशस्वी!", user: result.rows[0] });
     } else {
       res.status(401).json({ success: false, message: "चुकीचे युजरनेम किंवा पासवर्ड!" });
     }
@@ -44,36 +38,3 @@ app.post('/api/login', async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Talknik Server is LIVE`));
-// ... तुमच्या जुन्या कोडमध्ये हा नवीन रूट ॲड करा ...
-
-app.get('/api/user/:id', async (req, res) => {
-  const { id } = req.params;
-  try {
-    const result = await pool.query('SELECT username, email, profile_pic FROM users WHERE id = $1', [id]);
-    if (result.rows.length > 0) {
-      res.json({ success: true, user: result.rows[0] });
-    } else {
-      res.status(404).json({ success: false, message: "युजर सापडला नाही!" });
-    }
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// ... बाकी कोड ...
-// ... तुमच्या जुन्या कोडमध्ये हा नवीन API रूट ॲड करा ...
-
-app.put('/api/user/update', async (req, res) => {
-  const { userId, username, profile_pic } = req.body;
-  try {
-    const result = await pool.query(
-      'UPDATE users SET username = $1, profile_pic = $2 WHERE id = $3 RETURNING *',
-      [username, profile_pic, userId]
-    );
-    res.json({ success: true, message: "प्रोफाईल माहिती अपडेट झाली!", user: result.rows[0] });
-  } catch (err) {
-    res.status(500).json({ success: false, message: "अपडेट अयशस्वी!", error: err.message });
-  }
-});
-
-// ... बाकी कोड ...
