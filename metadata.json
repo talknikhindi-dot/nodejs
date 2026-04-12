@@ -1,0 +1,5 @@
+{
+  "name": "Full-Stack Node.js App",
+  "description": "A robust full-stack application with Express backend and React frontend.",
+  "requestFramePermissions": []
+}
