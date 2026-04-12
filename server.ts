@@ -1,38 +1,39 @@
-import express from 'express';
+﻿import express from 'express';
 import cors from 'cors';
-import pg from 'pg';
-const { Pool } = pg;
+import { Pool } from 'pg';
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Neon Database Connection (Direct)
+// Neon Database Connection
 const pool = new Pool({
-  connectionString: "postgresql://neondb_owner:npg_FJSkj3ei1Zom@ep-wispy-dust-amiz86q5-pooler.c-5.us-east-1.aws.neon.tech/neondb?sslmode=require",
-  ssl: { rejectUnauthorized: false }
+  connectionString: 'postgres://neondb_owner:npg_P9v8EAsRMTpW@ep-cool-butterfly-a1mrebe9-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require',
 });
 
-// १. टेबल सेटअप रूट
-app.get('/setup', async (req, res) => {
+// १. टेस्ट रूट
+app.get('/api/hello', (req, res) => {
+  res.json({ message: "Talknik Server is Online & Database Connected!" });
+});
+
+// २. लॉगिन रूट (API Call साठी)
+app.post('/api/login', async (req, res) => {
+  const { username, password } = req.body;
   try {
-    await pool.query('CREATE TABLE IF NOT EXISTS talknik_users (id SERIAL PRIMARY KEY, name TEXT, email TEXT UNIQUE);');
-    res.send('<h1>✅ Database Table Ready!</h1>');
+    // युजर चेक करणे (Neon DB मध्ये)
+    const result = await pool.query('SELECT * FROM users WHERE username = $1 AND password = $2', [username, password]);
+    
+    if (result.rows.length > 0) {
+      res.json({ success: true, message: "लॉगिन यशस्वी झाले!", user: result.rows[0] });
+    } else {
+      res.status(401).json({ success: false, message: "चुकीचे युजरनेम किंवा पासवर्ड!" });
+    }
   } catch (err) {
-    res.status(500).send('Error: ' + err.message);
+    res.status(500).json({ error: "डेटाबेस एरर!" });
   }
 });
 
-app.get('/', (req, res) => res.send('<h1>Talknik Server is Online!</h1>'));
-
-app.get('/api/hello', (req, res) => {
-  res.json({ status: 'success', message: 'Talknik IT Backend is Working!' });
-});
-
-const PORT = 3000;
-app.listen(PORT, '0.0.0.0', () => {
-  console.log('-------------------------------------------');
-  console.log('🚀 SUCCESS! Server is LIVE.');
-  console.log('🔗 Link: http://localhost:3000/api/hello');
-  console.log('-------------------------------------------');
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`SUCCESS! Talknik Server is LIVE on port ${PORT}`);
 });

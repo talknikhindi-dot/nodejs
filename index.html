@@ -1,13 +1,37 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Google AI Studio App</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Talknik IT - Live Test</title>
+    <style>
+        body { background: #000; color: #00ffcc; text-align: center; font-family: 'Courier New', monospace; padding: 50px; }
+        .box { border: 2px solid #00ffcc; padding: 30px; display: inline-block; box-shadow: 0 0 15px #00ffcc; }
+        input { display: block; margin: 10px auto; padding: 10px; background: #111; color: white; border: 1px solid #00ffcc; }
+        button { background: #00ffcc; color: black; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2>TALKNIK IT - LOGIN TEST</h2>
+        <input type="text" id="u" placeholder="Username">
+        <input type="password" id="p" placeholder="Password">
+        <button onclick="login()">LOGIN NOW</button>
+        <p id="msg"></p>
+    </div>
+    <script>
+        async function login() {
+            const msg = document.getElementById('msg');
+            msg.innerText = "Connecting to Render...";
+            try {
+                const res = await fetch('https://nodejs-65fz.onrender.com/api/login', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username: document.getElementById('u').value, password: document.getElementById('p').value})
+                });
+                const data = await res.json();
+                msg.innerText = data.message;
+                msg.style.color = data.success ? "lime" : "red";
+            } catch(e) { msg.innerText = "Server Error!"; }
+        }
+    </script>
+</body>
 </html>
-
