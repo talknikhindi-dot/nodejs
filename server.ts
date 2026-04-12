@@ -61,3 +61,19 @@ app.get('/api/user/:id', async (req, res) => {
 });
 
 // ... बाकी कोड ...
+// ... तुमच्या जुन्या कोडमध्ये हा नवीन API रूट ॲड करा ...
+
+app.put('/api/user/update', async (req, res) => {
+  const { userId, username, profile_pic } = req.body;
+  try {
+    const result = await pool.query(
+      'UPDATE users SET username = $1, profile_pic = $2 WHERE id = $3 RETURNING *',
+      [username, profile_pic, userId]
+    );
+    res.json({ success: true, message: "प्रोफाईल माहिती अपडेट झाली!", user: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "अपडेट अयशस्वी!", error: err.message });
+  }
+});
+
+// ... बाकी कोड ...
