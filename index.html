@@ -1,36 +1,89 @@
-﻿<!DOCTYPE html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <title>Talknik IT - Live Test</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Talknik IT - Auth System</title>
     <style>
-        body { background: #000; color: #00ffcc; text-align: center; font-family: 'Courier New', monospace; padding: 50px; }
-        .box { border: 2px solid #00ffcc; padding: 30px; display: inline-block; box-shadow: 0 0 15px #00ffcc; }
-        input { display: block; margin: 10px auto; padding: 10px; background: #111; color: white; border: 1px solid #00ffcc; }
-        button { background: #00ffcc; color: black; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; }
+        body { background: #000; color: #0ff; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
+        .container { border: 2px solid #0ff; padding: 30px; box-shadow: 0 0 25px #0ff; border-radius: 15px; width: 320px; background: rgba(0,0,0,0.9); }
+        h2 { text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; }
+        input { display: block; width: 92%; margin: 10px 0; padding: 12px; background: #111; border: 1px solid #0ff; color: #fff; border-radius: 5px; outline: none; }
+        input:focus { box-shadow: 0 0 10px #0ff; }
+        button { background: #0ff; color: #000; border: none; padding: 12px; cursor: pointer; font-weight: bold; width: 100%; border-radius: 5px; transition: 0.3s; margin-top: 10px; }
+        button:hover { background: #fff; box-shadow: 0 0 20px #fff; }
+        .toggle-link { margin-top: 15px; font-size: 0.9em; cursor: pointer; color: #aaa; }
+        .toggle-link b { color: #0ff; text-decoration: underline; }
+        #msg { margin-top: 15px; font-weight: bold; min-height: 20px; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
-    <div class="box">
-        <h2>TALKNIK IT - LOGIN TEST</h2>
-        <input type="text" id="u" placeholder="Username">
-        <input type="password" id="p" placeholder="Password">
-        <button onclick="login()">LOGIN NOW</button>
+    <div class="container">
+        <div id="login-section">
+            <h2>Login</h2>
+            <input type="text" id="l-user" placeholder="Username">
+            <input type="password" id="l-pass" placeholder="Password">
+            <button onclick="handleAuth('/login', 'l-user', 'l-pass')">LOGIN NOW</button>
+            <div class="toggle-link" onclick="toggleAuth()">???? ????? <b>Signup ???</b></div>
+        </div>
+
+        <div id="signup-section" class="hidden">
+            <h2>Signup</h2>
+            <input type="text" id="s-user" placeholder="Create Username">
+            <input type="password" id="s-pass" placeholder="Create Password">
+            <button onclick="handleAuth('/register', 's-user', 's-pass')">CREATE ACCOUNT</button>
+            <div class="toggle-link" onclick="toggleAuth()">???? ?????? ???? <b>Login ???</b></div>
+        </div>
+
         <p id="msg"></p>
     </div>
+
     <script>
-        async function login() {
+        function toggleAuth() {
+            document.getElementById('login-section').classList.toggle('hidden');
+            document.getElementById('signup-section').classList.toggle('hidden');
+            document.getElementById('msg').innerText = "";
+        }
+
+        async function handleAuth(endpoint, userField, passField) {
+            const username = document.getElementById(userField).value;
+            const password = document.getElementById(passField).value;
             const msg = document.getElementById('msg');
-            msg.innerText = "Connecting to Render...";
+
+            if(!username || !password) {
+                msg.style.color = "yellow";
+                msg.innerText = "????? ???? ?????? ???!";
+                return;
+            }
+
+            msg.style.color = "#0ff";
+            msg.innerText = "????????? ???? ???...";
+
             try {
-                const res = await fetch('https://nodejs-65fz.onrender.com/api/login', {
+                const response = await fetch(endpoint, {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({username: document.getElementById('u').value, password: document.getElementById('p').value})
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
                 });
-                const data = await res.json();
-                msg.innerText = data.message;
-                msg.style.color = data.success ? "lime" : "red";
-            } catch(e) { msg.innerText = "Server Error!"; }
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    msg.style.color = "lime";
+                    msg.innerText = data.message;
+                    if(endpoint === '/login') {
+                        setTimeout(() => { window.location.href = '/dashboard.html'; }, 1500);
+                    } else {
+                        setTimeout(() => { toggleAuth(); }, 2000); // Signup ???? Login ??? ????
+                    }
+                } else {
+                    msg.style.color = "red";
+                    msg.innerText = data.message;
+                }
+            } catch (err) {
+                msg.innerText = "Error: ??????? ?????? ??? ???? ????";
+            }
         }
     </script>
 </body>
